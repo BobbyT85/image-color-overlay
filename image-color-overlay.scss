@@ -1,0 +1,39 @@
+// add a color overlay to an image or svg
+// needs external filter generated from https://codepen.io/sosuke/pen/Pjoqqp for safari
+
+/// @param {Color} $color - color hex value
+/// @param {Filter} $filter -  alternative filter value
+/// @param {Number} $opacity - opacity of the new filter
+@mixin color-overlay($color: #000, $filter: none, $opacity: 1) {
+    $r: red($color) / 255;
+    $g: green($color) / 255;
+    $b: blue($color) / 255;
+    $a: $opacity;
+    $lightness: lightness($color);
+
+    // generate grayscale fallback if image/svg from data url isn't supported
+    filter: saturate(0%) brightness(0%) invert($lightness) opacity($opacity);
+
+    // svg fecolormatrix filter that gives precise color conversion
+    $svg-filter-id: 'color-overlay';
+    /* stylelint-disable declaration-block-no-duplicate-properties, string-no-newline */
+    filter: url('data:image/svg+xml;utf8,\
+      <svg xmlns="http://www.w3.org/2000/svg">\
+        <filter id="#{$svg-filter-id}" color-interpolation-filters="sRGB">\
+          <feColorMatrix type="matrix" values="\
+            0 0 0 0 #{$r}\
+            0 0 0 0 #{$g}\
+            0 0 0 0 #{$b}\
+            0 0 0 #{$a} 0\
+          "/>\
+        </filter>\
+      </svg>\
+      ##{$svg-filter-id}');
+    /* stylelint-enable */
+
+    // targets safari because the specific filter above doesn't work in the browser but gives no errors
+    // applies the externally generated filter as a 'near enough' backup
+    @supports (background: -webkit-named-image(i)) {
+        filter: brightness(0) saturate(100%) $filter;
+    }
+}
